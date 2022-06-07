@@ -14,7 +14,7 @@ from typing import List
 url_root = "https://openaccess.thecvf.com"
 
 class CVFPaper:
-    def __main__(self, title:str, authors:List[str], abs_url:str, pdf_url:str) -> None:
+    def __init__(self, title:str, authors:List[str], abs_url:str, pdf_url:str) -> None:
         self.title:str = title
         self.pdf_url:str = pdf_url
         self.abs_url:str = abs_url
@@ -36,16 +36,17 @@ def cvf_parse(fn:str) -> List[CVFPaper]:
         dd1_as : List[bs4.Tag] = dd1.find_all("a")
         authors:List[str] = [a.text for a in dd1_as]
 
-        title:str = dt.find("a").text
+        dta : bs4.Tag = dt.find("a")
+        title: str = dta.text
 
         dd2_as : List[bs4.Tag] = dd2.find_all("a", recursive=False)
         links = ["","",""]
-        links[0]=url_root + dt.find("a").attrs["href"]
+        links[0] = url_root + dta.attrs["href"]
         for a in dd2_as:
             if a.text == "pdf":
                 links[1] = url_root + a.attrs["href"]
             elif a.text == "supp":
-                links[2] = a.attrs["href"]
+                links[2] = url_root +  a.attrs["href"]
 
         papers.append(CVFPaper(title, authors, links[0], links[1]))
 
@@ -54,23 +55,23 @@ def cvf_parse(fn:str) -> List[CVFPaper]:
 
 if __name__ == "__main__":
     # import pyperclip
-    if len(sys.argv)<=1:
-        sys.stderr.write("cvf_parser - parse cvf html\n\n")
+    if len(sys.argv) <= 1:
+        sys.stderr.write("cvf_parser - parse cvf html\n")
         sys.stderr.write("[Usage] $ python cvf_parser.py inputfile.html [outputfile.txt]\n")
         sys.exit(-1)
 
-    papers=cvf_parse(sys.argv[1])
+    papers = cvf_parse(sys.argv[1])
 
     sout = io.StringIO()
     for p in papers:
         s = "\t".join([p.title, ', '.join(p.authors), p.abs_url, p.pdf_url]) + "\n"
         sout.write(s)
 
-    ofn:str=""
-    if len(sys.argv)<=3:
-        ofn=sys.argv[2]
+    ofn : str = ""
+    if len(sys.argv) >= 3:
+        ofn = sys.argv[2]
     else:
-        ofn=sys.argv[1]+".txt"
+        ofn = sys.argv[1] + ".txt"
 
     # pyperclip.copy(sout.getvalue())
     with open(ofn,"w",encoding="utf8") as fp:
